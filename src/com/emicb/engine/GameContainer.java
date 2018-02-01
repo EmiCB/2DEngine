@@ -4,12 +4,13 @@ public class GameContainer implements Runnable {
 	
 	private Thread thread;
 	private Window window;
+	private Renderer renderer;
 	
 	private boolean running = false;
 	private final double UPDATE_CAP = 1.0/60.0;
 	
-	private int width = 1600, height = 900; //16:9 aspect ratio
-	private float scale = 1f;
+	private int width = 960, height = 540; //16:9 aspect ratio
+	private float scale = 1.5f;
 	private String title = "2DEngine v1.0";
 	
 	// CONSTRUCTOR
@@ -19,6 +20,7 @@ public class GameContainer implements Runnable {
 	// START
 	public void start() {
 		window = new Window(this);
+		renderer = new Renderer(this);
 		
 		thread = new Thread(this);
 		thread.run();
@@ -66,11 +68,12 @@ public class GameContainer implements Runnable {
 			}
 			
 			if (render) {
+				renderer.clear();
 				//TODO: render game
 				window.update();
 				frames++;
 			}
-			// Uses less CPU% 
+			//Uses less CPU% 
 			else {
 				try {
 					Thread.sleep(1);
@@ -82,16 +85,18 @@ public class GameContainer implements Runnable {
 		}
 		dispose();
 	}
-	
+	//DISPOSE
 	private void dispose() {
 		
 	}
 	
-	
+	//MAIN LOOP
 	public static void main(String args[]) {
 		GameContainer gc = new GameContainer();
 		gc.start();
 	}
+	
+	//----- GETTERS & SETTERS -----
 	public int getWidth() {
 		return width;
 	}
@@ -115,5 +120,8 @@ public class GameContainer implements Runnable {
 	}
 	public void setTitle(String title) {
 		this.title = title;
+	}
+	public Window getWindow() {
+		return window;
 	}
 }
