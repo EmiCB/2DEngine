@@ -43,7 +43,8 @@ public class Window {
 		g.drawImage(image, 0, 0, canvas.getWidth(), canvas.getHeight(), null);
 		bs.show();
 	}
-
+	
+	//----- GETTERS & SETTERS -----
 	public BufferedImage getImage() {
 		return image;
 	}
