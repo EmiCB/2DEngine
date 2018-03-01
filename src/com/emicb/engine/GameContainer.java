@@ -1,25 +1,23 @@
 package com.emicb.engine;
 
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-
 public class GameContainer implements Runnable {
 	
 	private Thread thread;
 	private Window window;
 	private Renderer renderer;
 	private Input input;
+	private AbstractGame game;
 	
 	private boolean running = false;
 	private final double UPDATE_CAP = 1.0/60.0;
 	
-	private int width = 960, height = 540; //16:9 aspect ratio
-	private float scale = 1.5f;
+	private int width = 854, height = 480;			//16:9 aspect ratio
+	private float scale = 2f;
 	private String title = "2DEngine v1.0";
 	
 	// CONSTRUCTOR
-	public GameContainer() {
-		
+	public GameContainer(AbstractGame game) {
+		this.game = game;
 	}
 	// START
 	public void start() {
@@ -62,19 +60,9 @@ public class GameContainer implements Runnable {
 			while (unprocessedTime >= UPDATE_CAP) {
 				unprocessedTime -= UPDATE_CAP;
 				render = true;
-				//TODO: update game
 				
-				//--- input testing ---
-				if (input.isKey(KeyEvent.VK_SPACE)) {
-					System.out.println("W o w -- you pressed a key... good job!");
-				}
-				if (input.isButton(MouseEvent.BUTTON1)) {
-					System.out.println("Click click click");
-				}
-				//---------------------
 				
-				System.out.println("x:" + input.getMouseX() + " y:" + input.getMouseY());	//mouse position test
-				
+				game.update(this, (float)UPDATE_CAP);
 				input.update();
 				
 				if (frameTime >= 1.0) {
@@ -87,7 +75,7 @@ public class GameContainer implements Runnable {
 			
 			if (render) {
 				renderer.clear();
-				//TODO: render game
+				game.render(this, renderer);
 				window.update();
 				frames++;
 			}
@@ -106,12 +94,6 @@ public class GameContainer implements Runnable {
 	//DISPOSE
 	private void dispose() {
 		
-	}
-	
-	//MAIN LOOP
-	public static void main(String args[]) {
-		GameContainer gc = new GameContainer();
-		gc.start();
 	}
 	
 	//----- GETTERS & SETTERS -----
@@ -141,5 +123,8 @@ public class GameContainer implements Runnable {
 	}
 	public Window getWindow() {
 		return window;
+	}
+	public Input getInput() {
+		return input;
 	}
 }

@@ -31,7 +31,7 @@ public class Window {
 		frame.add(canvas, BorderLayout.CENTER);
 		frame.pack();											//sets frame to canvas size
 		frame.setLocationRelativeTo(null);
-		frame.setResizable(false);								//allows frame to be resized
+		frame.setResizable(false);								//allows frame to be resized (disabled)
 		frame.setVisible(true);
 		
 		canvas.createBufferStrategy(2);
