@@ -2,6 +2,7 @@ package com.emicb.engine;
 
 import java.awt.image.DataBufferInt;
 
+import com.emicb.engine.gfx.Font;
 import com.emicb.engine.gfx.Image;
 import com.emicb.engine.gfx.ImageTile;
 
@@ -9,6 +10,8 @@ public class Renderer {
 	
 	private int pW, pH;
 	private int[] p;
+	
+	private Font font = Font.STANDARD;		//make fonts easily changed
 	
 	public Renderer(GameContainer gc) {
 		pW = gc.getWidth();
@@ -57,6 +60,24 @@ public class Renderer {
 				setPixel(x + offX, y + offY, image.getP()[x + y * image.getW()]);
 			}
  		}
+	}
+	
+	public void drawString(String text, int offX, int offY, int color) {
+		text = text.toUpperCase();						//uncomment if font only has upper case
+		int offset = 0;
+		
+		for(int i = 0; i < text.length(); i++) {
+			int unicode = text.codePointAt(i) - 32;		//the - 32 makes space = 0
+			
+			for(int y = 0; y < font.getFontImage().getH(); y++) {
+				for(int x = 0; x < font.getWidths()[unicode]; x++) {
+					if(font.getFontImage().getP()[(x + font.getOffsets()[unicode]) + y * font.getFontImage().getW()] == 0xffffffff) {
+						setPixel(x + offX + offset, y + offY, color);
+					}
+				}
+			}
+			offset += font.getWidths()[unicode];
+		}
 	}
 	
 	public void drawImageTile(ImageTile image, int offX, int offY, int tileX, int tileY) {

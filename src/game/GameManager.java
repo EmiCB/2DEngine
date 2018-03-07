@@ -24,7 +24,7 @@ public class GameManager extends AbstractGame {
 	@Override
 	public void render(GameContainer gc, Renderer r) {
 		//r.drawImage(image, gc.getInput().getMouseX() - 32, gc.getInput().getMouseY() - 32);
-		r.drawImageTile(image, 0, 0, 0, 0);
+		//r.drawImageTile(image, 0, 0, 0, 0);
 	}
 	
 	//MAIN LOOP
