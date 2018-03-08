@@ -3,6 +3,7 @@ package game;
 import com.emicb.engine.AbstractGame;
 import com.emicb.engine.GameContainer;
 import com.emicb.engine.Renderer;
+import com.emicb.engine.audio.SoundClip;
 import com.emicb.engine.gfx.Image;
 import com.emicb.engine.gfx.ImageTile;
 
@@ -10,10 +11,13 @@ public class GameManager extends AbstractGame {
 	
 	//private Image image;
 	private ImageTile image;
+	private SoundClip clip;
 	
 	public GameManager() {
 		//image = new Image("/default.png");
 		image = new ImageTile("/tiles.png", 32, 32);
+		
+		clip.setVolume(-20);		//sets decibel modification
 	}
 
 	@Override
