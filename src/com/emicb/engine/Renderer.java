@@ -29,7 +29,7 @@ public class Renderer {
 	
 	public void setPixel(int x, int y, int value) {
 		//tells not to draw if out of bounds or hat one ugly pink color that makes thing transparent lol
-		if ((x < 0 || x > pW || y < 0 || y >= pH) || value == 0xffff00ff) {
+		if ((x < 0 || x > pW || y < 0 || y >= pH) || ((value >> 24) & 0xff) == 0 || value == 0xffff00ff) {
 			return;
 		}
 		
@@ -104,5 +104,42 @@ public class Renderer {
 				setPixel(x + offX, y + offY, image.getP()[(x + tileX * image.getTileW()) + (y + tileY * image.getTileH()) * image.getW()]);
 			}
  		}
+	}
+	
+	public void drawRect(int offX, int offY, int width, int height, int color) {
+		for(int y = 0; y <= height; y++) {
+			setPixel(offX, y + offY, color);
+			setPixel(offX + width, y + offY, color);
+		}
+		for(int x = 0; x <= width; x++) {
+			setPixel(x + offX, offY, color);
+			setPixel(x + offX, offY + height, color);
+		}
+	}
+	
+	public void drawRectFill(int offX, int offY, int width, int height, int color) {
+		//Stops rendering
+		if (offX < -width) return;
+		if (offY < -height) return;
+		if (offX >= pW) return;
+		if (offY >= pH) return;
+		
+		//Declare vars
+		int newX = 0;
+		int newY = 0;
+		int newWidth = width;
+		int newHeight = height;
+		
+		//Clips image
+		if (offX < 0) newX -= offX;
+		if (offY < 0) newY -= offY;
+		if (newWidth + offX >= pW) newWidth -= newWidth + offX - pW;
+		if (newHeight + offY >= pH) newHeight -= newHeight + offY - pH;
+		
+		for(int y = newY; y <= newHeight; y++) {
+			for(int x = newX; x <= newWidth; x++) {
+				setPixel(x + offX, y + offY, color);
+			}
+		}
 	}
 }
