@@ -121,11 +121,11 @@ public class Renderer {
 	}
 	
 	public void drawString(String text, int offX, int offY, int color) {
-		text = text.toUpperCase();						//uncomment if font only has upper case
+		//text = text.toUpperCase();						//uncomment if font only has upper case
 		int offset = 0;
 		
 		for(int i = 0; i < text.length(); i++) {
-			int unicode = text.codePointAt(i) - 32;		//the - 32 makes space = 0
+			int unicode = text.codePointAt(i);		// -32 will make space = 0
 			
 			for(int y = 0; y < font.getFontImage().getH(); y++) {
 				for(int x = 0; x < font.getWidths()[unicode]; x++) {

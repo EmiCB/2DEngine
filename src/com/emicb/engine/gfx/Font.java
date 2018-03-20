@@ -1,18 +1,19 @@
 package com.emicb.engine.gfx;
 
 public class Font {
-	public static final Font STANDARD = new Font("/fonts/standardfont.png");
+	public static final Font STANDARD = new Font("/fonts/comicsans12.png");
+	//public static final Font COMIC_SANS_12 = new Font("/fonts/comicsans12.png");
 	
 	private Image fontImage;
 	private int[] offsets;
 	private int[] widths;
 	
-	private int letters = 59; //unicode things
+	private int characters = 256; //unicode things
 	
 	public Font(String path) {
 		fontImage = new Image(path);
-		offsets = new int[letters];
-		widths = new int[letters];
+		offsets = new int[characters];
+		widths = new int[characters];
 		
 		int unicode = 0;
 		
