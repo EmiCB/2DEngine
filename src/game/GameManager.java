@@ -11,13 +11,17 @@ public class GameManager extends AbstractGame {
 	
 	//private Image image;
 	private ImageTile image;
-	private SoundClip clip;
+	//private SoundClip clip;
 	
 	public GameManager() {
 		//image = new Image("/default.png");
 		image = new ImageTile("/tiles.png", 32, 32);
 		
-		clip.setVolume(-20);		//sets decibel modification
+		//clip.setVolume(-20);		//sets decibel modification
+	}
+	
+	public void reset() {
+		
 	}
 
 	@Override
