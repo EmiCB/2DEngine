@@ -11,13 +11,17 @@ import com.emicb.engine.gfx.ImageRequest;
 import com.emicb.engine.gfx.ImageTile;
 
 public class Renderer {
-	private Font font = Font.STANDARD;		//make fonts easily changed
+	private Font font = Font.COMIC_SANS_12;		//make fonts easily changed
 	
 	private ArrayList<ImageRequest> imageRequest = new ArrayList<ImageRequest>();
 	
 	private int pW, pH;
 	private int[] p;						//pixels
 	private int[] zBuffer;
+	private int[] lightMap;
+	private int[] lightBlock;
+	
+	private int ambientColor = 0xff6b6b6b;
 	private int zDepth = 0;
 	private boolean processing = false;
 	
@@ -26,12 +30,16 @@ public class Renderer {
 		pH = gc.getHeight();
 		p = ((DataBufferInt)gc.getWindow().getImage().getRaster().getDataBuffer()).getData();
 		zBuffer = new int[p.length];
+		lightMap = new int[p.length];
+		lightBlock = new int[p.length];
 	}
 	
 	public void clear() {
 		for (int i = 0; i < p.length; i++) {
 			p[i] = 0;
 			zBuffer[i] = 0;
+			lightMap[i] = ambientColor;
+			lightBlock[i] = 0;
 			
 			//p[i] += i;				//cool pixel data stuff lol
 			//p[i] = 0xff000000;		//sets screen to black
@@ -56,6 +64,15 @@ public class Renderer {
 			setzDepth(ir.zDepth);
 			drawImage(ir.image, ir.offX, ir.offY);
 		}
+		
+		for(int i = 0; i < p.length; i++) {
+			float red = ((lightMap[i] >> 16) & 0xff) / 255;			//0xff = 255
+			float green = ((lightMap[i] >> 8) & 0xff) / 255;
+			float blue = (lightMap[i] & 0xff) / 255;
+			
+			p[i] = ((int)(((p[i] >> 16) & 0xff) * red) << 16 | (int)(((p[i] >> 8) & 0xff) * green) << 8| (int)((p[i] & 0xff) * blue));
+		}
+		
 		imageRequest.clear();
 		processing = false;
 	}
@@ -64,15 +81,12 @@ public class Renderer {
 		int alpha = ((value >> 24) & 0xff);			//alpha values go up to 255
 		
 		//tells not to draw if out of bounds or hat one ugly pink color that makes thing transparent lol
-		if ((x < 0 || x > pW || y < 0 || y >= pH) || alpha == 0 || value == 0xffff00ff) {
-			return;
-		}
+		if ((x < 0 || x > pW || y < 0 || y >= pH) || alpha == 0 || value == 0xffff00ff) return;
 		
 		int index = x + y * pW;
 		
-		if( zBuffer[index] > zDepth) {
-			return;
-		}
+		if( zBuffer[index] > zDepth) return;
+		
 		zBuffer[index] = zDepth;
 		if(alpha == 255) {
 			p[index] = value;
@@ -85,8 +99,20 @@ public class Renderer {
 			int newGreen = ((pixelColor >> 8) & 0xff) - (int)((((pixelColor >> 8) & 0xff) - ((value >> 8) & 0xff)) * (alpha/255f));
 			int newBlue = (pixelColor & 0xff0 - (int)(((pixelColor & 0xff) - (value & 0xff)) * (alpha/255f)));
 			
-			p[index] = (255 << 24 | newRed << 16 | newGreen << 8 | newBlue);
+			p[index] = (newRed << 16 | newGreen << 8 | newBlue);
 		}
+	}
+	
+	public void setLightMap(int x, int y, int value) {
+		if(x < 0 || x > pW || y < 0 || y >= pH) return;
+		
+		int baseColor = lightMap[x + y * pW];
+		
+		int maxRed = Math.max((baseColor >> 16) & 0xff, (value >> 16) & 0xff);
+		int maxGreen = Math.max((baseColor >> 8) & 0xff, (value >> 8) & 0xff); 
+		int maxBlue = Math.max((baseColor & 0xff), (value & 0xff));
+		
+		lightMap[x + y * pW] = (maxRed << 16 | maxGreen << 8 | maxBlue);
 	}
 	
 	public void drawImage(Image image, int offX, int offY) {
