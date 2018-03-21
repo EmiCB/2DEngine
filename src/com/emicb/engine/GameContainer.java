@@ -11,8 +11,8 @@ public class GameContainer implements Runnable {
 	private boolean running = false;
 	private final double UPDATE_CAP = 1.0/60.0;
 	
-	private int width = 854, height = 480;			//16:9 aspect ratio
-	private float scale = 2f;
+	private int width = 320, height = 240;			//16:9 aspect ratio: width = 854, height = 480
+	private float scale = 4f;
 	private String title = "2DEngine v1.0";
 	
 	// CONSTRUCTOR
@@ -47,7 +47,7 @@ public class GameContainer implements Runnable {
 		int fps = 0;
 		
 		while (running) {
-			render = false;			//set true to uncap frame rate
+			render = true;			//set true to uncap frame rate
 			
 			firstTime = System.nanoTime() / 1000000000.0;
 			passedTime = firstTime - lastTime;

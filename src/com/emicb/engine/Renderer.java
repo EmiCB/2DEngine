@@ -18,6 +18,8 @@ public class Renderer {
 	private int pW, pH;
 	private int[] p;						//pixels
 	private int[] zBuffer;
+	private int[] lightMap;
+	private int[] lightBlock;
 	
 	private int ambientColor = 0xff6b6b6b;
 	private int zDepth = 0;
@@ -28,13 +30,16 @@ public class Renderer {
 		pH = gc.getHeight();
 		p = ((DataBufferInt)gc.getWindow().getImage().getRaster().getDataBuffer()).getData();
 		zBuffer = new int[p.length];
-
+		lightMap = new int[p.length];
+		lightBlock = new int[p.length];
 	}
 	
 	public void clear() {
 		for (int i = 0; i < p.length; i++) {
 			p[i] = 0;
 			zBuffer[i] = 0;
+			lightMap[i] = ambientColor;
+			lightBlock[i] = 0;
 			
 			//p[i] += i;				//cool pixel data stuff lol
 			//p[i] = 0xff000000;		//sets screen to black
@@ -60,6 +65,15 @@ public class Renderer {
 			drawImage(ir.image, ir.offX, ir.offY);
 		}
 		
+		// merge arrays for light
+		for(int i = 0; i < p.length; i++) {
+			float red = ((lightMap[i] >> 16) & 0xff) / 255f;
+			float green = ((lightMap[i] >> 8) & 0xff) / 255f;
+			float blue = (lightMap[i] & 0xff) / 255f;
+			
+			p[i] = ((int)(((p[i] >> 16) & 0xff) * red) << 16 | (int)(((p[i] >> 8) & 0xff) * green) << 8 | (int)((p[i] & 0xff) * blue));
+		}
+		
 		imageRequest.clear();
 		processing = false;
 	}
@@ -68,7 +82,7 @@ public class Renderer {
 		int alpha = ((value >> 24) & 0xff);			//alpha values go up to 255
 		
 		//tells not to draw if out of bounds or hat one ugly pink color that makes thing transparent lol
-		if ((x < 0 || x > pW || y < 0 || y >= pH) || alpha == 0 || value == 0xffff00ff) return;
+		if ((x < 0 || x >= pW || y < 0 || y >= pH) || alpha == 0 || value == 0xffff00ff) return;
 		
 		int index = x + y * pW;
 		
@@ -87,6 +101,36 @@ public class Renderer {
 			int newBlue = (pixelColor & 0xff0 - (int)(((pixelColor & 0xff) - (value & 0xff)) * (alpha/255f)));
 			
 			p[index] = (newRed << 16 | newGreen << 8 | newBlue);
+		}
+	}
+	
+	public void setLightMap(int x, int y, int value) {
+		if (x < 0 || x >= pW || y < 0 || y >= pH) return;
+		
+		int baseColor = lightMap[x + y * pW];
+		
+		int maxRed = Math.max((baseColor >> 16) & 0xff, (value >> 16) & 0xff);
+		int maxGreen = Math.max((baseColor >> 8) & 0xff, (value >> 8) & 0xff);
+		int maxBlue = Math.max(baseColor & 0xff, value & 0xff);
+		
+		lightMap[x + y * pW] = (maxRed << 16 | maxGreen << 8 | maxBlue);
+	}
+	
+	public void drawString(String text, int offX, int offY, int color) {
+		//text = text.toUpperCase();						//uncomment if font only has upper case
+		int offset = 0;
+		
+		for(int i = 0; i < text.length(); i++) {
+			int unicode = text.codePointAt(i);		// -32 will make space = 0
+			
+			for(int y = 0; y < font.getFontImage().getH(); y++) {
+				for(int x = 0; x < font.getWidths()[unicode]; x++) {
+					if(font.getFontImage().getP()[(x + font.getOffsets()[unicode]) + y * font.getFontImage().getW()] == 0xffffffff) {
+						setPixel(x + offX + offset, y + offY, color);
+					}
+				}
+			}
+			offset += font.getWidths()[unicode];
 		}
 	}
 	
@@ -119,24 +163,6 @@ public class Renderer {
 				setPixel(x + offX, y + offY, image.getP()[x + y * image.getW()]);
 			}
  		}
-	}
-	
-	public void drawString(String text, int offX, int offY, int color) {
-		//text = text.toUpperCase();						//uncomment if font only has upper case
-		int offset = 0;
-		
-		for(int i = 0; i < text.length(); i++) {
-			int unicode = text.codePointAt(i);		// -32 will make space = 0
-			
-			for(int y = 0; y < font.getFontImage().getH(); y++) {
-				for(int x = 0; x < font.getWidths()[unicode]; x++) {
-					if(font.getFontImage().getP()[(x + font.getOffsets()[unicode]) + y * font.getFontImage().getW()] == 0xffffffff) {
-						setPixel(x + offX + offset, y + offY, color);
-					}
-				}
-			}
-			offset += font.getWidths()[unicode];
-		}
 	}
 	
 	public void drawImageTile(ImageTile image, int offX, int offY, int tileX, int tileY) {
