@@ -9,15 +9,10 @@ import com.emicb.engine.gfx.ImageTile;
 
 public class GameManager extends AbstractGame {
 	
-	//private Image image;
-	private ImageTile image;
-	//private SoundClip clip;
+	private Image image;
 	
 	public GameManager() {
-		//image = new Image("/default.png");
-		image = new ImageTile("/tiles.png", 32, 32);
-		
-		//clip.setVolume(-20);		//sets decibel modification
+		image = new Image("/bgtest.png");
 	}
 	
 	public void reset() {
@@ -31,8 +26,7 @@ public class GameManager extends AbstractGame {
 
 	@Override
 	public void render(GameContainer gc, Renderer r) {
-		//r.drawImage(image, gc.getInput().getMouseX() - 32, gc.getInput().getMouseY() - 32);
-		//r.drawImageTile(image, 0, 0, 0, 0);
+		r.drawImage(image, 0, 0);
 	}
 	
 	//MAIN LOOP
