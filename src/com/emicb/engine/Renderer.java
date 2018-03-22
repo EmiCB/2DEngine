@@ -9,19 +9,22 @@ import com.emicb.engine.gfx.Font;
 import com.emicb.engine.gfx.Image;
 import com.emicb.engine.gfx.ImageRequest;
 import com.emicb.engine.gfx.ImageTile;
+import com.emicb.engine.gfx.Light;
+import com.emicb.engine.gfx.LightRequest;
 
 public class Renderer {
 	private Font font = Font.COMIC_SANS_12;		//make fonts easily changed
 	
 	private ArrayList<ImageRequest> imageRequest = new ArrayList<ImageRequest>();
+	private ArrayList<LightRequest> lightRequest = new ArrayList<LightRequest>();
 	
 	private int pW, pH;
-	private int[] p;						//pixels
+	private int[] p;							//pixels
 	private int[] zBuffer;
 	private int[] lightMap;
 	private int[] lightBlock;
 	
-	private int ambientColor = 0xff6b6b6b;
+	private int ambientColor = 0xff232323;
 	private int zDepth = 0;
 	private boolean processing = false;
 	
@@ -41,8 +44,8 @@ public class Renderer {
 			lightMap[i] = ambientColor;
 			lightBlock[i] = 0;
 			
-			//p[i] += i;				//cool pixel data stuff lol
-			//p[i] = 0xff000000;		//sets screen to black
+			//p[i] += i;						//cool pixel data stuff lol
+			//p[i] = 0xff000000;				//sets screen to black
 		}
 	}
 	
@@ -65,7 +68,13 @@ public class Renderer {
 			drawImage(ir.image, ir.offX, ir.offY);
 		}
 		
-		// merge arrays for light
+		//draw lighting
+		for(int i = 0; i < lightRequest.size(); i++) {
+			LightRequest lr = lightRequest.get(i);
+			drawLightRequest(lr.light, lr.locX, lr.locY);
+		}
+		
+		//merge arrays for light
 		for(int i = 0; i < p.length; i++) {
 			float red = ((lightMap[i] >> 16) & 0xff) / 255f;
 			float green = ((lightMap[i] >> 8) & 0xff) / 255f;
@@ -75,13 +84,14 @@ public class Renderer {
 		}
 		
 		imageRequest.clear();
+		lightRequest.clear();
 		processing = false;
 	}
 	
 	public void setPixel(int x, int y, int value) {
 		int alpha = ((value >> 24) & 0xff);			//alpha values go up to 255
 		
-		//tells not to draw if out of bounds or hat one ugly pink color that makes thing transparent lol
+		//tells not to draw if out of bounds or that one ugly pink color that makes thing transparent lol
 		if ((x < 0 || x >= pW || y < 0 || y >= pH) || alpha == 0 || value == 0xffff00ff) return;
 		
 		int index = x + y * pW;
@@ -114,6 +124,13 @@ public class Renderer {
 		int maxBlue = Math.max(baseColor & 0xff, value & 0xff);
 		
 		lightMap[x + y * pW] = (maxRed << 16 | maxGreen << 8 | maxBlue);
+	}
+	public void setLightBlock(int x, int y, int value) {
+		if (x < 0 || x >= pW || y < 0 || y >= pH) return;
+		
+		if( zBuffer[x + y * pW] > zDepth) return;
+		
+		lightBlock[x + y * pW] = value;
 	}
 	
 	public void drawString(String text, int offX, int offY, int color) {
@@ -161,6 +178,7 @@ public class Renderer {
 		for (int y = newY; y < newHeight; y++) {
 			for (int x = newX; x < newWidth; x++) {
 				setPixel(x + offX, y + offY, image.getP()[x + y * image.getW()]);
+				setLightBlock(x + offX, y + offY, image.getLightBlock());
 			}
  		}
 	}
@@ -192,6 +210,7 @@ public class Renderer {
 		for (int y = newY; y < newHeight; y++) {
 			for (int x = newX; x < newWidth; x++) {
 				setPixel(x + offX, y + offY, image.getP()[(x + tileX * image.getTileW()) + (y + tileY * image.getTileH()) * image.getW()]);
+				setLightBlock(x + offX, y + offY, image.getLightBlock());
 			}
  		}
 	}
@@ -232,7 +251,58 @@ public class Renderer {
 			}
 		}
 	}
+	
+	public void drawLight(Light light, int offX, int offY) {
+		lightRequest.add(new LightRequest(light, offX, offY));
+	}
+	private void drawLightRequest(Light light, int offX, int offY) {
+		for(int i = 0; i <= light.getDiameter(); i++) {
+			drawLightLine(light, light.getRadius(), light.getRadius(), i, 0, offX, offY);						//top
+			drawLightLine(light, light.getRadius(), light.getRadius(), i, light.getDiameter(), offX, offY);		//bottom
+			drawLightLine(light, light.getRadius(), light.getRadius(), 0, i, offX, offY);						//left
+			drawLightLine(light, light.getRadius(), light.getRadius(), light.getDiameter(), i, offX, offY);		//right
+		}
+	}
+	private void drawLightLine(Light light, int x0, int y0, int x1, int y1, int offX, int offY) {
+		int dx = Math.abs(x1- x0);
+		int dy = Math.abs(y1 - y0);
+		
+		int sx = x0 < x1 ? 1 : -1;
+		int sy = y0 < y1 ? 1 : -1;
+		
+		int err = dx - dy;
+		int err2;
+		
+		while(true) {
+			int screenX = x0 - light.getRadius() + offX;
+			int screenY = y0 - light.getRadius() + offY;
+			
+			if(screenX < 0 || screenX >= pW || screenY < 0 || screenY >= pH) return;
+			
+			int lightColor = light.getLightValue(x0, y0);
+			if(lightColor == 0) return;
+			
+			if(lightBlock[screenX + screenY * pW] == Light.FULL) return;		//blocks light
+			
+			setLightMap(screenX, screenY, lightColor);
+			
+			if(x0 == x1 && y0 == y1) break;
+			
+			err2 = 2 * err;
+			
+			if(err2 > -1 * dy) {
+				err -= dy;
+				x0 += sx;
+			}
+			if(err2 < dx) {
+				err += dx;
+				y0 += sy;
+			}
+		}
+	}
 
+	
+	
 	public int getzDepth() {
 		return zDepth;
 	}

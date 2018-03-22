@@ -17,9 +17,11 @@ public class GameManager extends AbstractGame {
 	
 	public GameManager() {
 		image = new Image("/bgtest.png");
-		image2 = new Image("/test2.png");
 		
-		light = new Light(50, 0xff00ffff);
+		image2 = new Image("/woodboi.png");
+		image2.setLightBlock(Light.FULL);
+		
+		light = new Light(100, 0xff00ffff);
 	}
 	
 	public void reset() {
@@ -33,15 +35,10 @@ public class GameManager extends AbstractGame {
 
 	@Override
 	public void render(GameContainer gc, Renderer r) {
-		
-		for(int x = 0; x < light.getDiameter(); x++) {
-			for(int y = 0; y < light.getDiameter(); y++) {
-				r.setLightMap(x, y, light.getLightMap()[x + y * light.getDiameter()]);
-			}
-		}
-		
 		r.drawImage(image, 0, 0);
-		r.drawImage(image2, gc.getInput().getMouseX() - 32, gc.getInput().getMouseY() - 32);
+		r.drawImage(image2, 100, 100);
+		
+		r.drawLight(light, gc.getInput().getMouseX(), gc.getInput().getMouseY());
 	}
 	
 	//MAIN LOOP
