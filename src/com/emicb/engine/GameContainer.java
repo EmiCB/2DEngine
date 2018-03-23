@@ -11,9 +11,11 @@ public class GameContainer implements Runnable {
 	private boolean running = false;
 	private final double UPDATE_CAP = 1.0/60.0;
 	
-	private int width = 320, height = 240;			//16:9 aspect ratio: width = 854, height = 480
-	private float scale = 4f;
-	private String title = "2DEngine v1.0";
+	private int defaultW = 320, defaultH = 240;
+	private float defaultScl = 4f;
+	private int width = defaultW, height = defaultH;			//16:9 aspect ratio: width = 854, height = 480 | 16:9 aspect ratio: width = 320, height = 240 | 960 1280
+	private float scale = defaultScl;
+	private String title = "2DEngine v1.1";
 	
 	// CONSTRUCTOR
 	public GameContainer(AbstractGame game) {
@@ -45,6 +47,8 @@ public class GameContainer implements Runnable {
 		double frameTime = 0;
 		int frames = 0;
 		int fps = 0;
+		
+		game.init(this);
 		
 		while (running) {
 			render = true;			//set true to uncap frame rate
@@ -127,5 +131,8 @@ public class GameContainer implements Runnable {
 	}
 	public Input getInput() {
 		return input;
+	}
+	public Renderer getRenderer() {
+		return renderer;
 	}
 }
