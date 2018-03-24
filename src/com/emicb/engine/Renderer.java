@@ -28,6 +28,8 @@ public class Renderer {
 	private int zDepth = 0;
 	private boolean processing = false;
 	
+	private int camX, camY;
+	
 	public Renderer(GameContainer gc) {
 		pW = gc.getWidth();
 		pH = gc.getHeight();
@@ -90,7 +92,7 @@ public class Renderer {
 	
 	public void setPixel(int x, int y, int value) {
 		int alpha = ((value >> 24) & 0xff);			//alpha values go up to 255
-		
+
 		//tells not to draw if out of bounds or that one ugly pink color that makes thing transparent lol
 		if ((x < 0 || x >= pW || y < 0 || y >= pH) || alpha == 0 || value == 0xffff00ff) return;
 		
@@ -152,6 +154,9 @@ public class Renderer {
 	}
 	
 	public void drawImage(Image image, int offX, int offY) {
+		offX -= camX;
+		offY -= camY;
+		
 		if(image.isAlpha() && !processing) {
 			imageRequest.add(new ImageRequest(image, zDepth, offX, offY));
 			return;
@@ -184,6 +189,9 @@ public class Renderer {
 	}
 	
 	public void drawImageTile(ImageTile image, int offX, int offY, int tileX, int tileY) {
+		offX -= camX;
+		offY -= camY;
+		
 		if(image.isAlpha() && !processing) {
 			imageRequest.add(new ImageRequest(image.getTileImage(tileX, tileY), zDepth, offX, offY));
 			return;
@@ -216,6 +224,9 @@ public class Renderer {
 	}
 	
 	public void drawRect(int offX, int offY, int width, int height, int color) {
+		offX -= camX;
+		offY -= camY;
+		
 		for(int y = 0; y <= height; y++) {
 			setPixel(offX, y + offY, color);
 			setPixel(offX + width, y + offY, color);
@@ -227,26 +238,17 @@ public class Renderer {
 	}
 	
 	public void drawRectFill(int offX, int offY, int width, int height, int color) {
+		offX -= camX;
+		offY -= camY;
+		
 		//Stops rendering
 		if (offX < -width) return;
 		if (offY < -height) return;
 		if (offX >= pW) return;
 		if (offY >= pH) return;
 		
-		//Declare vars
-		int newX = 0;
-		int newY = 0;
-		int newWidth = width;
-		int newHeight = height;
-		
-		//Clips image
-		if (offX < 0) newX -= offX;
-		if (offY < 0) newY -= offY;
-		if (newWidth + offX >= pW) newWidth -= newWidth + offX - pW;
-		if (newHeight + offY >= pH) newHeight -= newHeight + offY - pH;
-		
-		for(int y = newY; y < newHeight; y++) {
-			for(int x = newX; x < newWidth; x++) {
+		for(int y = 0; y < height; y++) {
+			for(int x = 0; x < width; x++) {
 				setPixel(x + offX, y + offY, color);
 			}
 		}
@@ -256,6 +258,9 @@ public class Renderer {
 		lightRequest.add(new LightRequest(light, offX, offY));
 	}
 	private void drawLightRequest(Light light, int offX, int offY) {
+		offX -= camX;
+		offY -= camY;
+		
 		for(int i = 0; i <= light.getDiameter(); i++) {
 			drawLightLine(light, light.getRadius(), light.getRadius(), i, 0, offX, offY);						//top
 			drawLightLine(light, light.getRadius(), light.getRadius(), i, light.getDiameter(), offX, offY);		//bottom
@@ -317,5 +322,21 @@ public class Renderer {
 
 	public void setAmbientColor(int ambientColor) {
 		this.ambientColor = ambientColor;
+	}
+
+	public int getCamX() {
+		return camX;
+	}
+
+	public void setCamX(int camX) {
+		this.camX = camX;
+	}
+
+	public int getCamY() {
+		return camY;
+	}
+
+	public void setCamY(int camY) {
+		this.camY = camY;
 	}
 }
